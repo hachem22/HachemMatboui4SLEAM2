@@ -22,6 +22,11 @@ pipeline {
                 sh './mvnw -v'    // Vérifie que Maven Wrapper fonctionne
             }
         }
+        stage('Set Executable') {
+    steps {
+        sh 'chmod +x mvnw'
+    }
+}
 
         stage('Build') {
             steps {
