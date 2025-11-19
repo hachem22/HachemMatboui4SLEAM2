@@ -1,29 +1,25 @@
-
 pipeline {
     agent any
 
     environment {
-        // Met ici l'ID de tes credentials GitHub configurés dans Jenkins
         GIT_CREDENTIALS_ID = '12dca24c-9c9b-463d-9216-3098b14c0819'
     }
 
     stages {
         stage('Checkout') {
             steps {
-                // Récupère le projet depuis GitHub
                 git(
                     url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git',
                     branch: 'main',
-                    credentialsId: "${env.GIT_CREDENTIALS_ID}"
+                    credentialsId: GIT_CREDENTIALS_ID
                 )
             }
         }
 
         stage('Build') {
             steps {
-                // Build Maven en Linux, en sautant les tests
-               bat 'mvnw.cmd clean package -DskipTests'
-
+                // Sur Windows, build Maven en sautant les tests
+                bat 'mvnw.cmd clean package -DskipTests'
             }
         }
     }
