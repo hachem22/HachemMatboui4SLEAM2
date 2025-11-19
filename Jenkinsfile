@@ -22,7 +22,8 @@ pipeline {
         stage('Build') {
             steps {
                 // Build Maven en Linux, en sautant les tests
-                sh './mvnw clean package -DskipTests'
+               bat 'mvnw.cmd clean package -DskipTests'
+
             }
         }
     }
