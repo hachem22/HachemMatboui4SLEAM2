@@ -18,14 +18,14 @@ pipeline {
 
         stage('Verify Files') {
             steps {
-                bat 'dir'
-                bat 'mvnw.cmd -v'
+                sh 'ls -la'       // Vérifie que pom.xml et mvnw sont présents
+                sh './mvnw -v'    // Vérifie que Maven Wrapper fonctionne
             }
         }
 
         stage('Build') {
             steps {
-                bat 'mvnw.cmd clean package -DskipTests'
+                sh './mvnw clean package -DskipTests'  // Build Maven sur Linux
             }
         }
     }
