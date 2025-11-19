@@ -16,9 +16,15 @@ pipeline {
             }
         }
 
+        stage('Verify Files') {
+            steps {
+                bat 'dir'
+                bat 'mvnw.cmd -v'
+            }
+        }
+
         stage('Build') {
             steps {
-                // Sur Windows, build Maven en sautant les tests
                 bat 'mvnw.cmd clean package -DskipTests'
             }
         }
