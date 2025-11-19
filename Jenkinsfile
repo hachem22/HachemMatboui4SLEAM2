@@ -12,12 +12,13 @@ pipeline {
             }
         }
 
+    agent { label 'windows' }
+    stages {
         stage('Build') {
-            steps {
-                // Utiliser le script Windows
-                bat 'mvnw.cmd clean package -DskipTests'
-            }
+            bat 'mvn clean package'
         }
+    }
+
     }
 
     post {
