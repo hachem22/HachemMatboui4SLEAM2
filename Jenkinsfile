@@ -8,10 +8,11 @@ pipeline {
     stages {
         stage('Checkout') {
             steps {
-                git(
-                    url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git',
-                    credentialsId: "${env.GIT_CREDENTIALS_ID}"
-                )
+               git(
+                  url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git',
+                branch: 'main', // ou 'master' selon ton dépôt
+                credentialsId: "${env.GIT_CREDENTIALS_ID}"
+)
             }
         }
 
