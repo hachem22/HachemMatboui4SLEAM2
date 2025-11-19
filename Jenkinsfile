@@ -4,7 +4,7 @@ pipeline {
 
     environment {
         // Met ici l'ID de tes credentials GitHub configurés dans Jenkins
-        GIT_CREDENTIALS_ID = 'f3eb5fc8-6933-4bb8-b3e3-6751d8521693'
+        GIT_CREDENTIALS_ID = '12dca24c-9c9b-463d-9216-3098b14c0818'
     }
 
     stages {
