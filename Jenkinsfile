@@ -1,5 +1,10 @@
 pipeline {
-    agent any
+    agent {
+        docker {
+            image 'maven:3.9.9-eclipse-temurin-17'
+            args '-v $HOME/.m2:/root/.m2 -v /var/run/docker.sock:/var/run/docker.sock'
+        }
+    }
     
     environment {
         DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
@@ -17,7 +22,7 @@ pipeline {
         
         stage('Build and Test') {
             steps {
-                sh 'mvn clean package -DskipTests'  // Skip les tests pour l'instant
+                sh 'mvn clean package -DskipTests'
             }
         }
         
