@@ -12,19 +12,12 @@ pipeline {
                 script {
                     echo "🔍 Checking prerequisites..."
                     sh '''
-                        # Vérifier si Docker est installé
-                        if ! command -v docker &> /dev/null; then
-                            echo "❌ ERROR: Docker is not installed!"
-                            exit 1
-                        fi
-                        
-                        # Vérifier la version de Docker
                         docker --version
                         echo "✅ Docker is available"
-                        
-                        # Vérifier Maven
                         mvn --version
                         echo "✅ Maven is available"
+                        java --version
+                        echo "✅ Java is available"
                     '''
                 }
             }
@@ -52,7 +45,7 @@ pipeline {
                         docker images
                         docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
                         docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                        docker images
+                        docker images | grep ${DOCKER_IMAGE}
                     """
                 }
             }
@@ -83,6 +76,7 @@ pipeline {
         success {
             echo "🎉 Pipeline succeeded!"
             echo "Docker Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
+            echo "📸 Take screenshots for your submission!"
         }
         failure {
             echo "❌ Pipeline failed!"
