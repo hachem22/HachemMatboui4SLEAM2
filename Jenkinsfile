@@ -25,9 +25,9 @@ pipeline {
                 script {
                     sh '''
                         echo "=== CONSTRUCTION DE L'IMAGE DOCKER ==="
-                        sudo docker --version
-                        sudo docker build -t lhech24/student-management:${BUILD_NUMBER} .
-                        sudo docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
+                         docker --version
+                        docker build -t lhech24/student-management:${BUILD_NUMBER} .
+                         docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
                         echo "✅ Image Docker construite"
                     '''
                 }
