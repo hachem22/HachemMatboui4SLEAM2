@@ -20,24 +20,20 @@ pipeline {
             }
         }
         
-        stage('Build Docker Image') {
-            steps {
-                script {
-                    sh """
-                        # Vérifier que le JAR existe
-                        if [ ! -f "target/*.jar" ]; then
-                            echo "❌ ERREUR: Fichier JAR non trouvé"
-                            exit 1
-                        fi
-                        
-                        # Construire l'image Docker
-                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                        docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                        echo "✅ Image Docker construite: ${DOCKER_IMAGE}:${DOCKER_TAG}"
-                    """
-                }
-            }
+       stage('Build Docker Image') {
+    steps {
+        script {
+            // Vérifier l'existence du JAR
+            sh 'ls -la target/*.jar'
+            
+            // Si la commande précédente échoue (fichier non trouvé), le pipeline s'arrêtera automatiquement
+            sh 'echo "✅ Fichier JAR trouvé, construction de l\'image Docker..."'
+            
+            // Continuer avec la construction Docker
+            sh 'docker build -t votre-image .'
         }
+    }
+}
         
         stage('Push to Docker Hub') {
             steps {
