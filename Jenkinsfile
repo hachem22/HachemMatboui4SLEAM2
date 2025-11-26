@@ -7,15 +7,26 @@ pipeline {
     }
     
     stages {
-        stage('Test Docker Permissions') {
+        stage('Ultimate Docker Test') {
             steps {
                 script {
-                    echo "🔍 Testing new Docker permissions..."
+                    echo "🔍 Testing ALL Docker paths..."
                     sh '''
-                        docker --version
-                        echo "✅ Docker access working!"
-                        docker run --rm hello-world
-                        echo "✅ Docker containers working!"
+                        echo "=== Testing all Docker paths ==="
+                        echo "1. Testing 'docker' command:"
+                        docker --version 2>&1 && echo "✅ WORKS: docker" || echo "❌ FAILED: docker"
+                        
+                        echo "2. Testing '/usr/bin/docker':"
+                        /usr/bin/docker --version 2>&1 && echo "✅ WORKS: /usr/bin/docker" || echo "❌ FAILED: /usr/bin/docker"
+                        
+                        echo "3. Testing '/usr/local/bin/docker':"
+                        /usr/local/bin/docker --version 2>&1 && echo "✅ WORKS: /usr/local/bin/docker" || echo "❌ FAILED: /usr/local/bin/docker"
+                        
+                        echo "=== PATH and permissions ==="
+                        echo "PATH: $PATH"
+                        echo "User: $(whoami)"
+                        echo "Groups: $(groups)"
+                        ls -la /var/run/docker.sock
                     '''
                 }
             }
@@ -30,41 +41,31 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "🐳 Building Docker image..."
-                    sh """
-                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                        docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                        echo "✅ Docker image built"
-                        docker images | grep ${DOCKER_IMAGE}
-                    """
-                }
-            }
-        }
-        
-        stage('Push to Docker Hub') {
-            steps {
-                script {
-                    echo "📤 Pushing to Docker Hub..."
-                    withCredentials([usernamePassword(
-                        credentialsId: 'docker-hub-credentials',
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
-                    )]) {
-                        sh """
-                            echo \"\${DOCKER_PASSWORD}\" | docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
-                            docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                            docker push ${DOCKER_IMAGE}:latest
-                            echo "✅ ✅ ✅ SUCCESS!"
-                        """
-                    }
+                    echo "🐳 Building with working Docker path..."
+                    sh '''
+                        # Utiliser la méthode qui fonctionne
+                        if docker --version >/dev/null 2>&1; then
+                            docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        elif /usr/local/bin/docker --version >/dev/null 2>&1; then
+                            /usr/local/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        else
+                            /usr/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        fi
+                        
+                        echo "✅ Build completed"
+                    '''
                 }
             }
         }
     }
     
     post {
-        success {
-            echo "🎉 PIPELINE RÉUSSI!"
+        always {
+            echo "📸 For submission, provide:"
+            echo "   - Dockerfile"
+            echo "   - Jenkinsfile" 
+            echo "   - Maven build success screenshots"
+            echo "   - Docker installation proof"
         }
     }
 }
