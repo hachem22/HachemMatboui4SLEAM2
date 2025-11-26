@@ -2,12 +2,12 @@ pipeline {
     agent any
     
     tools {
-        jdk 'jdk-21'
+        jdk 'jdk-17'
         maven 'maven-3.6.3'
     }
     
     environment {
-        DOCKER_IMAGE = 'hachemmatboui/student-management:latest'
+        DOCKER_IMAGE = 'lhech24/student-management:latest'
     }
     
     stages {
