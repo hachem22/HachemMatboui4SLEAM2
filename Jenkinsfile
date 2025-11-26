@@ -16,7 +16,6 @@ pipeline {
         stage('Build') {
             steps {
                 sh 'mvn clean package -DskipTests'
-                sh 'ls -la target/*.jar'
             }
         }
         
@@ -24,16 +23,14 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        echo "=== CONSTRUCTION DOCKER ==="
-                        
-                        # Test sudo sans mot de passe
+                        # Test sudo
                         sudo whoami
                         
                         # Construction Docker
                         sudo docker build -t lhech24/student-management:${BUILD_NUMBER} .
                         sudo docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
                         
-                        echo "✅ Image Docker construite: lhech24/student-management:${BUILD_NUMBER}"
+                        echo "✅ Image Docker construite"
                     '''
                 }
             }
@@ -48,8 +45,6 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )]) {
                         sh '''
-                            echo "=== PUSH DOCKER HUB ==="
-                            
                             # Login Docker Hub
                             echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
                             
@@ -57,8 +52,7 @@ pipeline {
                             sudo docker push lhech24/student-management:${BUILD_NUMBER}
                             sudo docker push lhech24/student-management:latest
                             
-                            echo "🎉 🎉 🎉 SUCCÈS COMPLET! 🎉 🎉 🎉"
-                            echo "📦 Image disponible: lhech24/student-management:${BUILD_NUMBER}"
+                            echo "🎉 SUCCÈS COMPLET!"
                         '''
                     }
                 }
@@ -68,11 +62,7 @@ pipeline {
     
     post {
         success {
-            echo "✅ ✅ ✅ PIPELINE RÉUSSI! ✅ ✅ ✅"
-            echo "🌐 Voir sur: https://hub.docker.com/r/lhech24/student-management"
-        }
-        failure {
-            echo "❌ Pipeline échoué"
+            echo "✅ PIPELINE RÉUSSI!"
         }
     }
 }
