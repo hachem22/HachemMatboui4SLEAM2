@@ -24,11 +24,16 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        echo "=== CONSTRUCTION DE L'IMAGE DOCKER ==="
-                        sudo docker --version
+                        echo "=== CONSTRUCTION DOCKER ==="
+                        
+                        # Test sudo sans mot de passe
+                        sudo whoami
+                        
+                        # Construction Docker
                         sudo docker build -t lhech24/student-management:${BUILD_NUMBER} .
                         sudo docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
-                        echo "✅ Image Docker construite"
+                        
+                        echo "✅ Image Docker construite: lhech24/student-management:${BUILD_NUMBER}"
                     '''
                 }
             }
@@ -43,11 +48,17 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )]) {
                         sh '''
-                            echo "=== PUSH VERS DOCKER HUB ==="
+                            echo "=== PUSH DOCKER HUB ==="
+                            
+                            # Login Docker Hub
                             echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
+                            
+                            # Push images
                             sudo docker push lhech24/student-management:${BUILD_NUMBER}
                             sudo docker push lhech24/student-management:latest
-                            echo "🎉 IMAGES PUSHÉES AVEC SUCCÈS!"
+                            
+                            echo "🎉 🎉 🎉 SUCCÈS COMPLET! 🎉 🎉 🎉"
+                            echo "📦 Image disponible: lhech24/student-management:${BUILD_NUMBER}"
                         '''
                     }
                 }
@@ -58,7 +69,7 @@ pipeline {
     post {
         success {
             echo "✅ ✅ ✅ PIPELINE RÉUSSI! ✅ ✅ ✅"
-            echo "🌐 Votre image est disponible sur: https://hub.docker.com/r/lhech24/student-management"
+            echo "🌐 Voir sur: https://hub.docker.com/r/lhech24/student-management"
         }
         failure {
             echo "❌ Pipeline échoué"
