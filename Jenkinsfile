@@ -12,9 +12,9 @@ pipeline {
                 script {
                     echo "🔍 Verifying Docker access..."
                     sh '''
-                        sudo -u jenkins /usr/bin/docker --version
+                        /usr/bin/docker --version
                         echo "✅ Docker version check passed"
-                        sudo -u jenkins /usr/bin/docker images
+                        /usr/bin/docker images
                         echo "✅ Docker access verified successfully!"
                     '''
                 }
@@ -40,12 +40,12 @@ pipeline {
                 script {
                     echo "🐳 Building Docker image..."
                     sh """
-                        sudo -u jenkins /usr/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                        sudo -u jenkins /usr/bin/docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                        /usr/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        /usr/bin/docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
                         echo "✅ Docker image built successfully"
                         
                         # Afficher les images créées
-                        sudo -u jenkins /usr/bin/docker images | grep ${DOCKER_IMAGE} || echo "No images found yet"
+                        /usr/bin/docker images | grep ${DOCKER_IMAGE} || echo "No images found yet"
                     """
                 }
             }
@@ -61,9 +61,9 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )]) {
                         sh """
-                            echo \"\${DOCKER_PASSWORD}\" | sudo -u jenkins /usr/bin/docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
-                            sudo -u jenkins /usr/bin/docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                            sudo -u jenkins /usr/bin/docker push ${DOCKER_IMAGE}:latest
+                            echo \"\${DOCKER_PASSWORD}\" | /usr/bin/docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
+                            /usr/bin/docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                            /usr/bin/docker push ${DOCKER_IMAGE}:latest
                             echo "✅ ✅ ✅ SUCCESS: Pushed ${DOCKER_IMAGE}:${DOCKER_TAG} to Docker Hub!"
                         """
                     }
