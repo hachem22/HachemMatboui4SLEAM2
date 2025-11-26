@@ -24,7 +24,15 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        echo "🐳 Construction de l'image Docker..."
+                        echo "=== ÉTAPE 1: Vérification de Docker ==="
+                        docker --version
+                        echo "✅ Docker est installé"
+                        
+                        echo "=== ÉTAPE 2: Vérification du JAR ==="
+                        ls -la target/*.jar
+                        echo "✅ JAR trouvé"
+                        
+                        echo "=== ÉTAPE 3: Construction Docker ==="
                         docker build -t lhech24/student-management:${BUILD_NUMBER} .
                         docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
                         echo "✅ Image Docker construite: lhech24/student-management:${BUILD_NUMBER}"
@@ -37,22 +45,23 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                        credentialsId: 'docker-hub-credentials',  // ✅ CORRECT: vos credentials existent
-                        usernameVariable: 'DOCKER_USERNAME',
-                        passwordVariable: 'DOCKER_PASSWORD'
+                        credentialsId: 'docker-hub-credentials',
+                        usernameVariable: 'DOCKER_USER',
+                        passwordVariable: 'DOCKER_PASS'
                     )]) {
                         sh '''
-                            echo "🔐 Connexion à Docker Hub..."
-                            echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
+                            echo "=== ÉTAPE 4: Connexion Docker Hub ==="
+                            docker login -u $DOCKER_USER -p $DOCKER_PASS
+                            echo "✅ Connecté à Docker Hub"
                             
-                            echo "📤 Envoi des images vers Docker Hub..."
+                            echo "=== ÉTAPE 5: Push des images ==="
                             docker push lhech24/student-management:${BUILD_NUMBER}
                             docker push lhech24/student-management:latest
+                            echo "✅ Images poussées avec succès"
                             
-                            echo "✅ ✅ ✅ SUCCÈS COMPLET!"
-                            echo "📦 Images disponibles sur:"
+                            echo "🎉 SUCCÈS COMPLET!"
+                            echo "📦 Votre image est disponible sur:"
                             echo "   https://hub.docker.com/r/lhech24/student-management"
-                            echo "🔗 Lien direct: https://hub.docker.com/r/lhech24/student-management/tags"
                         '''
                     }
                 }
@@ -62,12 +71,8 @@ pipeline {
     
     post {
         success {
-            echo "🎉 🎉 🎉 PIPELINE RÉUSSI!"
-            echo "✨ Toutes les étapes terminées avec succès"
-            echo "📸 Prenez ces captures d'écran pour la soumission:"
-            echo "   1. Vue d'ensemble du repository sur Docker Hub"
-            echo "   2. Liste des tags avec vos images"
-            echo "   3. Logs Jenkins montrant le succès"
+            echo "🎉 🎉 🎉 PIPELINE COMPLÈTEMENT RÉUSSI! 🎉 🎉 🎉"
+            echo "✅ Toutes les étapes sont terminées avec succès"
         }
         failure {
             echo "❌ Pipeline échoué"
