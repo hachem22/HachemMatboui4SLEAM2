@@ -24,17 +24,17 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        echo "=== ÉTAPE 1: Vérification de Docker ==="
-                        docker --version
-                        echo "✅ Docker est installé"
+                        echo "=== ÉTAPE 1: Vérification de Docker avec sudo ==="
+                        sudo docker --version
+                        echo "✅ Docker est accessible"
                         
                         echo "=== ÉTAPE 2: Vérification du JAR ==="
                         ls -la target/*.jar
                         echo "✅ JAR trouvé"
                         
                         echo "=== ÉTAPE 3: Construction Docker ==="
-                        docker build -t lhech24/student-management:${BUILD_NUMBER} .
-                        docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
+                        sudo docker build -t lhech24/student-management:${BUILD_NUMBER} .
+                        sudo docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
                         echo "✅ Image Docker construite: lhech24/student-management:${BUILD_NUMBER}"
                     '''
                 }
@@ -51,17 +51,16 @@ pipeline {
                     )]) {
                         sh '''
                             echo "=== ÉTAPE 4: Connexion Docker Hub ==="
-                            docker login -u $DOCKER_USER -p $DOCKER_PASS
+                            sudo docker login -u $DOCKER_USER -p $DOCKER_PASS
                             echo "✅ Connecté à Docker Hub"
                             
                             echo "=== ÉTAPE 5: Push des images ==="
-                            docker push lhech24/student-management:${BUILD_NUMBER}
-                            docker push lhech24/student-management:latest
+                            sudo docker push lhech24/student-management:${BUILD_NUMBER}
+                            sudo docker push lhech24/student-management:latest
                             echo "✅ Images poussées avec succès"
                             
-                            echo "🎉 SUCCÈS COMPLET!"
-                            echo "📦 Votre image est disponible sur:"
-                            echo "   https://hub.docker.com/r/lhech24/student-management"
+                            echo "🎉 🎉 🎉 SUCCÈS COMPLET! 🎉 🎉 🎉"
+                            echo "📦 Votre image est disponible sur Docker Hub!"
                         '''
                     }
                 }
@@ -71,8 +70,7 @@ pipeline {
     
     post {
         success {
-            echo "🎉 🎉 🎉 PIPELINE COMPLÈTEMENT RÉUSSI! 🎉 🎉 🎉"
-            echo "✅ Toutes les étapes sont terminées avec succès"
+            echo "✅ ✅ ✅ PIPELINE COMPLÈTEMENT RÉUSSI! ✅ ✅ ✅"
         }
         failure {
             echo "❌ Pipeline échoué"
