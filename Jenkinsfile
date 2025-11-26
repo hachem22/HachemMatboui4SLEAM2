@@ -7,48 +7,37 @@ pipeline {
     }
     
     stages {
+        // UN SEUL CHECKOUT - supprimez le double!
         stage('Checkout') {
             steps {
                 checkout scm
             }
         }
         
-        stage('Build Application') {
+        stage('Build') {
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
         
-        stage('Build Docker Image') {
+        stage('Docker Build') {
             steps {
-                script {
-                    sh '''
-                        # Test simple de Docker
-                        docker --version || echo "Docker non accessible"
-                        
-                        # Construction de l'image
-                        docker build -t lhech24/student-management:${BUILD_NUMBER} .
-                        docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
-                    '''
-                }
+                sh 'docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .'
             }
         }
         
-        stage('Push to Docker Hub') {
+        stage('Docker Push') {
             steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'docker-hub-credentials',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        sh '''
-                            docker login -u $DOCKER_USER -p $DOCKER_PASS
-                            docker push lhech24/student-management:${BUILD_NUMBER}
-                            docker push lhech24/student-management:latest
-                            echo "SUCCÈS!"
-                        '''
-                    }
+                withCredentials([usernamePassword(
+                    credentialsId: 'docker-hub-credentials',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh '''
+                        docker login -u $DOCKER_USER -p $DOCKER_PASS
+                        docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                        echo "✅ SUCCÈS!"
+                    '''
                 }
             }
         }
