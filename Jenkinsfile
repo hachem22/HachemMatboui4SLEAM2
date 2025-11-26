@@ -12,7 +12,8 @@ pipeline {
                 script {
                     echo "✅ Checking Docker installation..."
                     sh '''
-                        docker --version
+                        # Utiliser le chemin complet
+                        /usr/bin/docker --version
                         echo "✅ Docker is ready!"
                     '''
                 }
@@ -37,12 +38,12 @@ pipeline {
                 script {
                     echo "🐳 Building Docker image..."
                     sh """
-                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                        docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                        /usr/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        /usr/bin/docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
                         echo "✅ Docker image built successfully"
                         
                         # Afficher les images
-                        docker images | grep ${DOCKER_IMAGE} || echo "No images found yet"
+                        /usr/bin/docker images | grep ${DOCKER_IMAGE} || echo "No images found yet"
                     """
                 }
             }
@@ -58,9 +59,9 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )]) {
                         sh """
-                            echo \"\${DOCKER_PASSWORD}\" | docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
-                            docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                            docker push ${DOCKER_IMAGE}:latest
+                            echo \"\${DOCKER_PASSWORD}\" | /usr/bin/docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
+                            /usr/bin/docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                            /usr/bin/docker push ${DOCKER_IMAGE}:latest
                             echo "✅ ✅ ✅ SUCCESS: Image ${DOCKER_IMAGE}:${DOCKER_TAG} pushed to Docker Hub!"
                         """
                     }
@@ -73,11 +74,6 @@ pipeline {
         success {
             echo "🎉 🎉 🎉 PIPELINE COMPLETED SUCCESSFULLY!"
             echo "📦 Docker Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
-            echo "📸 Take screenshots for submission:"
-            echo "   1. Dockerfile content"
-            echo "   2. Jenkinsfile content" 
-            echo "   3. Successful pipeline with ALL GREEN stages"
-            echo "   4. Docker Hub repository with pushed image"
         }
         failure {
             echo "❌ Pipeline failed - check logs above"
