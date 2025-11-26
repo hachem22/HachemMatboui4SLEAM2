@@ -7,22 +7,14 @@ pipeline {
     }
     
     stages {
-        stage('Debug Environment') {
+        stage('Verify SUDO Docker') {
             steps {
                 script {
-                    echo "🔍 Debugging environment..."
+                    echo "🔍 Testing SUDO Docker access..."
                     sh '''
-                        echo "=== ENVIRONMENT INFO ==="
-                        echo "User: $(whoami)"
-                        echo "Working directory: $(pwd)"
-                        echo "PATH: $PATH"
-                        echo "=== DOCKER INFO ==="
-                        sudo docker --version
-                        echo "✅ Docker is available via sudo"
-                        echo "=== FILES ==="
-                        ls -la
-                        echo "=== DOCKERFILE ==="
-                        cat Dockerfile
+                        # Tester sudo sans mot de passe
+                        sudo -n docker --version
+                        echo "✅ SUDO Docker access verified!"
                     '''
                 }
             }
@@ -38,7 +30,7 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "🐳 Building Docker image with SUDO..."
+                    echo "🐳 Building Docker image..."
                     sh """
                         sudo docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
                         sudo docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
@@ -54,7 +46,7 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    echo "📤 Pushing to Docker Hub with SUDO..."
+                    echo "📤 Pushing to Docker Hub..."
                     withCredentials([usernamePassword(
                         credentialsId: 'docker-hub-credentials',
                         usernameVariable: 'DOCKER_USERNAME',
@@ -76,10 +68,9 @@ pipeline {
         success {
             echo "🎉 🎉 🎉 PIPELINE COMPLETED SUCCESSFULLY!"
             echo "📦 Docker Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
-            echo "📸 Take final screenshots for submission!"
         }
         failure {
-            echo "❌ Pipeline failed - check logs above"
+            echo "❌ Pipeline failed"
         }
     }
 }
