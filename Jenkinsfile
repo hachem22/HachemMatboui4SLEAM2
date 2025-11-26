@@ -3,7 +3,7 @@ pipeline {
     
     environment {
         DOCKERHUB_CREDENTIALS = credentials('docker-hub-credentials')
-        DOCKER_IMAGE = 'lhech24/student-management'
+        DOCKER_IMAGE = 'votredockerhub/student-management'  // Remplacez par votre nom Docker Hub
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
     
@@ -11,7 +11,7 @@ pipeline {
         stage('Checkout') {
             steps {
                 git branch: 'main',
-                url: 'https://github.com/lbech24/student-management.git'
+                url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git'  // VOTRE dépôt
             }
         }
         
@@ -32,7 +32,6 @@ pipeline {
             }
         }
         
-        // NOUVEAU STAGE: Build de l'image Docker
         stage('Build Docker Image') {
             steps {
                 script {
@@ -44,7 +43,6 @@ pipeline {
             }
         }
         
-        // NOUVEAU STAGE: Push vers Docker Hub
         stage('Push to Docker Hub') {
             steps {
                 script {
