@@ -2,7 +2,7 @@ pipeline {
     agent any
     
     environment {
-        DOCKER_IMAGE = 'Lhech24/student-management'
+        DOCKER_IMAGE = 'lhech24/student-management'
         DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
     
@@ -24,21 +24,10 @@ pipeline {
             steps {
                 script {
                     sh '''
-                        # Vérifier l installation de Docker
-                        echo "🔍 Vérification de Docker..."
-                        docker --version
-                        
-                        # Vérifier le fichier JAR
-                        echo "🔍 Vérification du fichier JAR..."
-                        ls -la target/*.jar
-                        
-                        # Construire l image Docker
-                        echo "🐳 Construction de l image Docker..."
-                        docker build -t Lhech24/student-management:${BUILD_NUMBER} .
-                        docker tag Lhech24/student-management:${BUILD_NUMBER} Lhech24/student-management:latest
-                        
-                        echo "✅ Image Docker construite avec succès"
-                        echo "📦 Image: Lhech24/student-management:${BUILD_NUMBER}"
+                        echo "🐳 Construction de l'image Docker..."
+                        docker build -t lhech24/student-management:${BUILD_NUMBER} .
+                        docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
+                        echo "✅ Image Docker construite: lhech24/student-management:${BUILD_NUMBER}"
                     '''
                 }
             }
@@ -48,25 +37,22 @@ pipeline {
             steps {
                 script {
                     withCredentials([usernamePassword(
-                        credentialsId: 'docker-hub-credentials',
+                        credentialsId: 'docker-hub-credentials',  // ✅ CORRECT: vos credentials existent
                         usernameVariable: 'DOCKER_USERNAME',
                         passwordVariable: 'DOCKER_PASSWORD'
                     )]) {
                         sh '''
-                            # Connexion à Docker Hub
                             echo "🔐 Connexion à Docker Hub..."
                             echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_USERNAME" --password-stdin
                             
-                            # Push des images
                             echo "📤 Envoi des images vers Docker Hub..."
-                            docker push Lhech24/student-management:${BUILD_NUMBER}
-                            docker push Lhech24/student-management:latest
+                            docker push lhech24/student-management:${BUILD_NUMBER}
+                            docker push lhech24/student-management:latest
                             
                             echo "✅ ✅ ✅ SUCCÈS COMPLET!"
-                            echo "📦 Images envoyées:"
-                            echo "   - Lhech24/student-management:${BUILD_NUMBER}"
-                            echo "   - Lhech24/student-management:latest"
-                            echo "🌐 Lien: https://hub.docker.com/r/Lhech24/student-management"
+                            echo "📦 Images disponibles sur:"
+                            echo "   https://hub.docker.com/r/lhech24/student-management"
+                            echo "🔗 Lien direct: https://hub.docker.com/r/lhech24/student-management/tags"
                         '''
                     }
                 }
@@ -75,17 +61,16 @@ pipeline {
     }
     
     post {
-        always {
-            echo "📊 Pipeline terminé - Build #${env.BUILD_NUMBER}"
-        }
         success {
             echo "🎉 🎉 🎉 PIPELINE RÉUSSI!"
             echo "✨ Toutes les étapes terminées avec succès"
-            echo "📸 Prenez des captures d écran pour la soumission"
+            echo "📸 Prenez ces captures d'écran pour la soumission:"
+            echo "   1. Vue d'ensemble du repository sur Docker Hub"
+            echo "   2. Liste des tags avec vos images"
+            echo "   3. Logs Jenkins montrant le succès"
         }
         failure {
             echo "❌ Pipeline échoué"
-            echo "🔍 Vérifiez les logs pour identifier le problème"
         }
     }
 }
