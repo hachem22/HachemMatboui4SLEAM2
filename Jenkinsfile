@@ -7,35 +7,33 @@ pipeline {
     }
     
     stages {
-        stage('Verify Docker Running') {
+        stage('Checkout') {
             steps {
-                script {
-                    echo "🔍 Verifying Docker service..."
-                    sh '''
-                        # Vérifier que Docker est en cours d'exécution
-                        docker --version
-                        echo "✅ Docker is running!"
-                        docker run --rm hello-world
-                        echo "✅ Docker containers work!"
-                    '''
-                }
+                checkout scm
             }
         }
         
-        stage('Build App') {
+        stage('Build Application') {
             steps {
                 sh 'mvn clean package -DskipTests'
+                sh 'ls -la target/'
             }
         }
         
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "🐳 Building Docker image..."
                     sh """
+                        # Vérifier que le JAR existe
+                        if [ ! -f "target/*.jar" ]; then
+                            echo "❌ ERREUR: Fichier JAR non trouvé"
+                            exit 1
+                        fi
+                        
+                        # Construire l'image Docker
                         docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
                         docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                        echo "✅ Docker image built"
+                        echo "✅ Image Docker construite: ${DOCKER_IMAGE}:${DOCKER_TAG}"
                     """
                 }
             }
@@ -44,17 +42,22 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    echo "📤 Pushing to Docker Hub..."
                     withCredentials([usernamePassword(
                         credentialsId: 'docker-hub-credentials',
                         usernameVariable: 'DOCKER_USERNAME',
                         passwordVariable: 'DOCKER_PASSWORD'
                     )]) {
                         sh """
+                            # Se connecter à Docker Hub
                             echo \"\${DOCKER_PASSWORD}\" | docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
+                            
+                            # Pousser l'image
                             docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                             docker push ${DOCKER_IMAGE}:latest
-                            echo "✅ ✅ ✅ SUCCESS: Image pushed to Docker Hub!"
+                            
+                            echo "✅ ✅ ✅ IMAGE PUSHÉE AVEC SUCCÈS!"
+                            echo "📦 Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
+                            echo "🌐 Disponible sur: https://hub.docker.com/r/lhech24/student-management"
                         """
                     }
                 }
@@ -64,7 +67,11 @@ pipeline {
     
     post {
         success {
-            echo "🎉 🎉 🎉 PIPELINE COMPLETED SUCCESSFULLY!"
+            echo "🎉 🎉 🎉 PIPELINE RÉUSSI!"
+            echo "📸 Prenez les captures d'écran pour la soumission"
+        }
+        failure {
+            echo "❌ Pipeline échoué"
         }
     }
 }
