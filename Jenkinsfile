@@ -7,33 +7,15 @@ pipeline {
     }
     
     stages {
-        stage('Check Prerequisites') {
-            steps {
-                script {
-                    echo "🔍 Checking prerequisites..."
-                    sh '''
-                        docker --version
-                        echo "✅ Docker is available"
-                        mvn --version
-                        echo "✅ Maven is available"
-                        java --version
-                        echo "✅ Java is available"
-                    '''
-                }
-            }
-        }
-        
         stage('Checkout') {
             steps {
                 checkout scm
-                sh 'ls -la'
             }
         }
         
         stage('Build App') {
             steps {
                 sh 'mvn clean package -DskipTests'
-                sh 'ls -la target/'
             }
         }
         
@@ -42,10 +24,10 @@ pipeline {
                 script {
                     echo "🐳 Building Docker image..."
                     sh """
-                        docker images
-                        docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                        docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                        docker images | grep ${DOCKER_IMAGE}
+                        # Essayer avec le chemin complet
+                        /usr/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        /usr/bin/docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                        echo "✅ Docker image built successfully"
                     """
                 }
             }
@@ -61,10 +43,10 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )]) {
                         sh """
-                            echo \"\${DOCKER_PASSWORD}\" | docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
-                            docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                            docker push ${DOCKER_IMAGE}:latest
-                            echo "✅ Successfully pushed ${DOCKER_IMAGE}:${DOCKER_TAG} to Docker Hub!"
+                            echo \"\${DOCKER_PASSWORD}\" | /usr/bin/docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
+                            /usr/bin/docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                            /usr/bin/docker push ${DOCKER_IMAGE}:latest
+                            echo "✅ Successfully pushed to Docker Hub!"
                         """
                     }
                 }
@@ -74,12 +56,7 @@ pipeline {
     
     post {
         success {
-            echo "🎉 Pipeline succeeded!"
-            echo "Docker Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
-            echo "📸 Take screenshots for your submission!"
-        }
-        failure {
-            echo "❌ Pipeline failed!"
+            echo "🎉 Pipeline succeeded! Docker image built and pushed."
         }
     }
 }
