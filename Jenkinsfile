@@ -7,38 +7,38 @@ pipeline {
     }
     
     stages {
-        stage('Find Docker') {
+        stage('Find Docker Anywhere') {
             steps {
                 script {
-                    echo "🔍 Locating Docker installation..."
+                    echo "🔍 Ultimate Docker detection..."
                     sh '''
-                        echo "=== Docker Detection ==="
-                        echo "1. Testing command 'docker':"
-                        docker --version 2>&1 || echo "   ❌ Not found in PATH"
+                        echo "=== ULTIMATE DOCKER SEARCH ==="
                         
-                        echo "2. Testing '/usr/bin/docker':"
-                        /usr/bin/docker --version 2>&1 || echo "   ❌ Not found at /usr/bin/docker"
+                        # Méthode 1: Command standard
+                        echo "1. Testing 'docker' command:"
+                        docker --version 2>&1 && echo "   ✅ FOUND: docker" || echo "   ❌ Not found"
                         
-                        echo "3. Testing '/usr/local/bin/docker':"
-                        /usr/local/bin/docker --version 2>&1 || echo "   ❌ Not found at /usr/local/bin/docker"
+                        # Méthode 2: Snap
+                        echo "2. Testing Snap Docker:"
+                        /snap/bin/docker --version 2>&1 && echo "   ✅ FOUND: /snap/bin/docker" || echo "   ❌ Not found"
                         
-                        echo "4. Testing '/snap/bin/docker':"
-                        /snap/bin/docker --version 2>&1 || echo "   ❌ Not found at /snap/bin/docker"
+                        # Méthode 3: Standard paths
+                        echo "3. Testing standard paths:"
+                        [ -x "/usr/bin/docker" ] && echo "   ✅ FOUND: /usr/bin/docker" || echo "   ❌ Not /usr/bin/docker"
+                        [ -x "/usr/local/bin/docker" ] && echo "   ✅ FOUND: /usr/local/bin/docker" || echo "   ❌ Not /usr/local/bin/docker"
                         
-                        echo "5. Searching for docker..."
-                        find / -name docker -type f -executable 2>/dev/null | head -10
+                        # Méthode 4: Find all docker executables
+                        echo "4. ALL DOCKER EXECUTABLES:"
+                        find / -name docker -type f -executable 2>/dev/null | while read path; do
+                            echo "   📍 $path"
+                            $path --version 2>&1 | head -1
+                        done
                         
-                        echo "6. Jenkins user info:"
-                        id
-                        echo "PATH: $PATH"
+                        echo "=== JENKINS USER INFO ==="
+                        echo "User: $(whoami)"
+                        echo "Groups: $(groups)"
                     '''
                 }
-            }
-        }
-        
-        stage('Checkout') {
-            steps {
-                checkout scm
             }
         }
         
@@ -51,40 +51,35 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "🐳 Building Docker image..."
+                    echo "🐳 Building with detected Docker..."
                     sh '''
                         # Essayer toutes les méthodes possibles
+                        DOCKER_CMD=""
+                        
                         if command -v docker >/dev/null 2>&1; then
-                            echo "✅ Using 'docker' from PATH"
-                            docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                        elif [ -x "/usr/bin/docker" ]; then
-                            echo "✅ Using '/usr/bin/docker'"
-                            /usr/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                        elif [ -x "/usr/local/bin/docker" ]; then
-                            echo "✅ Using '/usr/local/bin/docker'"
-                            /usr/local/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                            DOCKER_CMD="docker"
+                            echo "✅ Using: docker (from PATH)"
                         elif [ -x "/snap/bin/docker" ]; then
-                            echo "✅ Using '/snap/bin/docker'"
-                            /snap/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                            DOCKER_CMD="/snap/bin/docker"
+                            echo "✅ Using: /snap/bin/docker"
+                        elif [ -x "/usr/bin/docker" ]; then
+                            DOCKER_CMD="/usr/bin/docker"
+                            echo "✅ Using: /usr/bin/docker"
+                        elif [ -x "/usr/local/bin/docker" ]; then
+                            DOCKER_CMD="/usr/local/bin/docker"
+                            echo "✅ Using: /usr/local/bin/docker"
                         else
-                            echo "❌ ERROR: Cannot find Docker executable"
-                            echo "Available executables:"
-                            find / -name docker -type f -executable 2>/dev/null
+                            echo "❌ CRITICAL: No Docker executable found!"
+                            echo "=== INSTALL DOCKER ON JENKINS SERVER ==="
+                            echo "Run: sudo apt install -y docker.io"
+                            echo "Or: sudo snap install docker"
                             exit 1
                         fi
                         
-                        # Tag l'image (utiliser la même méthode)
-                        if command -v docker >/dev/null 2>&1; then
-                            docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                        elif [ -x "/usr/bin/docker" ]; then
-                            /usr/bin/docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                        elif [ -x "/usr/local/bin/docker" ]; then
-                            /usr/local/bin/docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                        elif [ -x "/snap/bin/docker" ]; then
-                            /snap/bin/docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
-                        fi
-                        
-                        echo "✅ Docker image built successfully"
+                        # Construire l'image
+                        $DOCKER_CMD build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        $DOCKER_CMD tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                        echo "✅ Docker image built successfully!"
                     '''
                 }
             }
@@ -100,39 +95,22 @@ pipeline {
                         passwordVariable: 'DOCKER_PASSWORD'
                     )]) {
                         sh '''
-                            # Login et push avec la même méthode
+                            # Utiliser la même méthode détectée
                             if command -v docker >/dev/null 2>&1; then
                                 echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
                                 docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                                docker push ${DOCKER_IMAGE}:latest
-                            elif [ -x "/usr/bin/docker" ]; then
-                                echo "${DOCKER_PASSWORD}" | /usr/bin/docker login -u "${DOCKER_USERNAME}" --password-stdin
-                                /usr/bin/docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                                /usr/bin/docker push ${DOCKER_IMAGE}:latest
-                            elif [ -x "/usr/local/bin/docker" ]; then
-                                echo "${DOCKER_PASSWORD}" | /usr/local/bin/docker login -u "${DOCKER_USERNAME}" --password-stdin
-                                /usr/local/bin/docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                                /usr/local/bin/docker push ${DOCKER_IMAGE}:latest
                             elif [ -x "/snap/bin/docker" ]; then
                                 echo "${DOCKER_PASSWORD}" | /snap/bin/docker login -u "${DOCKER_USERNAME}" --password-stdin
                                 /snap/bin/docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                                /snap/bin/docker push ${DOCKER_IMAGE}:latest
+                            elif [ -x "/usr/bin/docker" ]; then
+                                echo "${DOCKER_PASSWORD}" | /usr/bin/docker login -u "${DOCKER_USERNAME}" --password-stdin
+                                /usr/bin/docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
                             fi
-                            echo "✅ ✅ ✅ SUCCESS: Pushed to Docker Hub!"
+                            echo "✅ ✅ ✅ SUCCESS: Image pushed to Docker Hub!"
                         '''
                     }
                 }
             }
-        }
-    }
-    
-    post {
-        success {
-            echo "🎉 🎉 🎉 PIPELINE SUCCEEDED!"
-            echo "Docker Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
-        }
-        failure {
-            echo "❌ Pipeline failed"
         }
     }
 }
