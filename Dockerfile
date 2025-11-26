@@ -1,14 +1,14 @@
-# Utilise une image OpenJDK légère
-FROM openjdk:17-jre-slim
+# Dockerfile
+FROM openjdk:17-jdk-slim
 
-# Définit le répertoire de travail dans le conteneur
+# Définir le répertoire de travail
 WORKDIR /app
 
-# Copie le fichier JAR depuis le target Maven
-COPY target/student-management-0.0.1-SNAPSHOT.jar app.jar
+# Copier le fichier JAR de l'application
+COPY target/student-management-*.jar app.jar
 
-# Expose le port 8080 pour l'application Spring Boot
+# Exposer le port
 EXPOSE 8080
 
-# Point d'entrée pour lancer l'application
+# Commande pour lancer l'application
 ENTRYPOINT ["java", "-jar", "app.jar"]
