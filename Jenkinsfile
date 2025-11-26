@@ -7,22 +7,24 @@ pipeline {
     }
     
     stages {
-        stage('Verify Docker') {
+        stage('Debug Environment') {
             steps {
                 script {
-                    echo "✅ Checking Docker installation..."
+                    echo "🔍 Debugging environment..."
                     sh '''
-                        # Utiliser le chemin complet
-                        /usr/bin/docker --version
-                        echo "✅ Docker is ready!"
+                        echo "=== ENVIRONMENT INFO ==="
+                        echo "User: $(whoami)"
+                        echo "Working directory: $(pwd)"
+                        echo "PATH: $PATH"
+                        echo "=== DOCKER INFO ==="
+                        sudo docker --version
+                        echo "✅ Docker is available via sudo"
+                        echo "=== FILES ==="
+                        ls -la
+                        echo "=== DOCKERFILE ==="
+                        cat Dockerfile
                     '''
                 }
-            }
-        }
-        
-        stage('Checkout') {
-            steps {
-                checkout scm
             }
         }
         
@@ -36,14 +38,14 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 script {
-                    echo "🐳 Building Docker image..."
+                    echo "🐳 Building Docker image with SUDO..."
                     sh """
-                        /usr/bin/docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
-                        /usr/bin/docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
+                        sudo docker build -t ${DOCKER_IMAGE}:${DOCKER_TAG} .
+                        sudo docker tag ${DOCKER_IMAGE}:${DOCKER_TAG} ${DOCKER_IMAGE}:latest
                         echo "✅ Docker image built successfully"
                         
                         # Afficher les images
-                        /usr/bin/docker images | grep ${DOCKER_IMAGE} || echo "No images found yet"
+                        sudo docker images | grep ${DOCKER_IMAGE} || echo "No images found yet"
                     """
                 }
             }
@@ -52,16 +54,16 @@ pipeline {
         stage('Push to Docker Hub') {
             steps {
                 script {
-                    echo "📤 Pushing to Docker Hub..."
+                    echo "📤 Pushing to Docker Hub with SUDO..."
                     withCredentials([usernamePassword(
                         credentialsId: 'docker-hub-credentials',
                         usernameVariable: 'DOCKER_USERNAME',
                         passwordVariable: 'DOCKER_PASSWORD'
                     )]) {
                         sh """
-                            echo \"\${DOCKER_PASSWORD}\" | /usr/bin/docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
-                            /usr/bin/docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
-                            /usr/bin/docker push ${DOCKER_IMAGE}:latest
+                            echo \"\${DOCKER_PASSWORD}\" | sudo docker login -u \"\${DOCKER_USERNAME}\" --password-stdin
+                            sudo docker push ${DOCKER_IMAGE}:${DOCKER_TAG}
+                            sudo docker push ${DOCKER_IMAGE}:latest
                             echo "✅ ✅ ✅ SUCCESS: Image ${DOCKER_IMAGE}:${DOCKER_TAG} pushed to Docker Hub!"
                         """
                     }
@@ -74,6 +76,7 @@ pipeline {
         success {
             echo "🎉 🎉 🎉 PIPELINE COMPLETED SUCCESSFULLY!"
             echo "📦 Docker Image: ${DOCKER_IMAGE}:${DOCKER_TAG}"
+            echo "📸 Take final screenshots for submission!"
         }
         failure {
             echo "❌ Pipeline failed - check logs above"
