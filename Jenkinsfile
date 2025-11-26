@@ -1,62 +1,41 @@
 pipeline {
     agent any
     
-    tools {
-        jdk 'jdk-17'
-        maven 'maven-3.6.3'
-    }
-    
     environment {
-        DOCKER_IMAGE = 'lhech24/student-management:latest'
+        DOCKER_IMAGE = 'lhech24/student-management'
+        DOCKER_TAG = "${env.BUILD_NUMBER}"
     }
     
     stages {
-        stage('Checkout Git') {
+        stage('Checkout') {
             steps {
-                echo ' Récupération du code depuis GitHub...'
-                git credentialsId: 'github-credentials', 
-                    url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git', 
-                    branch: 'main'
+                checkout scm
             }
         }
         
-        stage('Build Maven') {
+        stage('Build') {
             steps {
-                echo ' Construction du projet Maven...'
+                sh 'mvn clean package -DskipTests'
+                sh 'ls -la target/*.jar'
+            }
+        }
+        
+        stage('Docker Build') {
+            steps {
                 script {
-                    sh 'mvn clean package -DskipTests'
+                    sh '''
+                        echo "=== CONSTRUCTION DE L'IMAGE DOCKER ==="
+                        sudo docker --version
+                        sudo docker build -t lhech24/student-management:${BUILD_NUMBER} .
+                        sudo docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
+                        echo "✅ Image Docker construite"
+                    '''
                 }
             }
         }
         
-        stage('Archive Artifact') {
+        stage('Docker Push') {
             steps {
-                echo ' Archivage du livrable JAR...'
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
-            }
-        }
-        
-        stage('Fix Docker Permissions') {
-            steps {
-                echo ' Correction des permissions Docker...'
-                script {
-                    sh 'sudo chmod 666 /var/run/docker.sock || true'
-                }
-            }
-        }
-        
-        stage('Build Docker Image') {
-            steps {
-                echo ' Construction de l image Docker...'
-                script {
-                    sh "docker build -t ${DOCKER_IMAGE} ."
-                }
-            }
-        }
-        
-        stage('Push to Docker Hub') {
-            steps {
-                echo ' Envoi de l image vers Docker Hub...'
                 script {
                     withCredentials([usernamePassword(
                         credentialsId: 'docker-hub-credentials',
@@ -64,9 +43,11 @@ pipeline {
                         passwordVariable: 'DOCKER_PASS'
                     )]) {
                         sh '''
-                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                            docker push hachemmatboui/student-management:latest
-                            docker logout
+                            echo "=== PUSH VERS DOCKER HUB ==="
+                            echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
+                            sudo docker push lhech24/student-management:${BUILD_NUMBER}
+                            sudo docker push lhech24/student-management:latest
+                            echo "🎉 IMAGES PUSHÉES AVEC SUCCÈS!"
                         '''
                     }
                 }
@@ -75,14 +56,12 @@ pipeline {
     }
     
     post {
-        always {
-            cleanWs()
-        }
         success {
-            echo '  Build réussi! Le livrable est disponible et l image Docker est publiée.'
+            echo "✅ ✅ ✅ PIPELINE RÉUSSI! ✅ ✅ ✅"
+            echo "🌐 Votre image est disponible sur: https://hub.docker.com/r/lhech24/student-management"
         }
         failure {
-            echo '  Build échoué! Consultez les logs pour plus de détails.'
+            echo "❌ Pipeline échoué"
         }
     }
 }
