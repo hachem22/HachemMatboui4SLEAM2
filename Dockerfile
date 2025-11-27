@@ -1,9 +1,11 @@
-FROM openjdk:17-jdk-slim
+# Image de base Java 17
+FROM openjdk:17-slim
 
+# Répertoire de travail
 WORKDIR /app
 
-COPY target/student-management.jar app.jar
+# Copier le jar généré par Maven
+COPY target/student-management.jar /app/student-management.jar
 
-EXPOSE 8080
-
-ENTRYPOINT ["java", "-jar", "app.jar"]
+# Commande pour exécuter l'application
+ENTRYPOINT ["java", "-jar", "student-management.jar"]
