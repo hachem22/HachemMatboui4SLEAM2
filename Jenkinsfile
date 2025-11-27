@@ -10,7 +10,7 @@ pipeline {
         GIT_CREDENTIALS = '12dca24c-9c9b-463d-9216-3098b14c0819'
         DOCKER_CREDENTIALS = 'dockerhub-creds'
         DOCKER_USERNAME = 'lhech24'
-        IMAGE_NAME = "${env.DOCKER_USERNAME}/student-managementt"
+        IMAGE_NAME = "${env.DOCKER_USERNAME}/student-management"
         IMAGE_TAG = "${env.BUILD_NUMBER}"
         FULL_IMAGE_NAME = "${env.IMAGE_NAME}:${env.IMAGE_TAG}"
     }
