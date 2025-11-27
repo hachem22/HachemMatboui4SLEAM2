@@ -1,5 +1,9 @@
-FROM eclipse-temurin:17-jre-alpine
+FROM openjdk:17-jdk-slim
+
 WORKDIR /app
-COPY target/student-management-0.0.1-SNAPSHOT.jar .
-EXPOSE 9090
-CMD ["java", "-jar", "student-management-0.0.1-SNAPSHOT.jar"]
+
+COPY target/student-management.jar app.jar
+
+EXPOSE 8080
+
+ENTRYPOINT ["java", "-jar", "app.jar"]
