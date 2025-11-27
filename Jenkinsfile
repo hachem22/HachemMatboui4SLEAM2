@@ -1,67 +1,36 @@
 pipeline {
     agent any
-    
-    environment {
-        DOCKER_IMAGE = 'lhech24/student-management'
-        DOCKER_TAG = "${env.BUILD_NUMBER}"
-    }
-    
+
     stages {
-        stage('Checkout') {
+
+        stage('Build Project') {
             steps {
-                checkout scm
-            }
-        }
-        
-        stage('Build') {
-            steps {
+                echo "=== Compilation du projet ==="
                 sh 'mvn clean package -DskipTests'
-                sh 'ls -la target/*.jar'
             }
         }
-        
-        stage('Docker Build') {
+
+        stage('Build Docker Image') {
             steps {
-                script {
+                echo "=== Construction de l\'image Docker ==="
+                sh """
+                    docker build -t lhech24/student-management:${BUILD_NUMBER} .
+                    docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
+                """
+            }
+        }
+
+        stage('Push Docker Image') {
+            steps {
+                echo "=== Push de l\'image sur DockerHub ==="
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
                     sh '''
-                        echo "=== CONSTRUCTION DE L'IMAGE DOCKER ==="
-                         docker --version
-                        docker build -t lhech24/student-management:${BUILD_NUMBER} .
-                         docker tag lhech24/student-management:${BUILD_NUMBER} lhech24/student-management:latest
-                        echo "✅ Image Docker construite"
+                        echo $PASS | docker login -u $USER --password-stdin
+                        docker push lhech24/student-management:${BUILD_NUMBER}
+                        docker push lhech24/student-management:latest
                     '''
                 }
             }
-        }
-        
-        stage('Docker Push') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: 'docker-hub-credentials',
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        sh '''
-                            echo "=== PUSH VERS DOCKER HUB ==="
-                            echo "$DOCKER_PASS" | sudo docker login -u "$DOCKER_USER" --password-stdin
-                            sudo docker push lhech24/student-management:${BUILD_NUMBER}
-                            sudo docker push lhech24/student-management:latest
-                            echo "🎉 IMAGES PUSHÉES AVEC SUCCÈS!"
-                        '''
-                    }
-                }
-            }
-        }
-    }
-    
-    post {
-        success {
-            echo "✅ ✅ ✅ PIPELINE RÉUSSI! ✅ ✅ ✅"
-            echo "🌐 Votre image est disponible sur: https://hub.docker.com/r/lhech24/student-management"
-        }
-        failure {
-            echo "❌ Pipeline échoué"
         }
     }
 }
