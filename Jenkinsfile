@@ -49,48 +49,31 @@ pipeline {
         }
         
         stage('Docker Build') {
-            steps {
-                script {
-                    try {
-                        echo "Building image: ${FULL_IMAGE_NAME}"
-                        sh """
-                            docker build \
-                                --no-cache \
-                                --progress=plain \
-                                -t ${FULL_IMAGE_NAME} \
-                                -t ${IMAGE_NAME}:latest \
-                                .
-                        """
-                        echo '✓ Docker build successful'
-                    } catch (Exception e) {
-                        echo "✗ Docker build failed: ${e.message}"
-                        sh 'docker images'
-                        throw e
-                    }
-                }
-            }
+    steps {
+        script {
+            sh "/usr/local/bin/docker build -t ${FULL_IMAGE_NAME} ."
+            sh "/usr/local/bin/docker tag ${FULL_IMAGE_NAME} ${IMAGE_NAME}:latest"
         }
-        
-        stage('Docker Push') {
-            steps {
-                script {
-                    withCredentials([usernamePassword(
-                        credentialsId: env.DOCKER_CREDENTIALS,
-                        usernameVariable: 'DOCKER_USER',
-                        passwordVariable: 'DOCKER_PASS'
-                    )]) {
-                        sh '''
-                            echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin
-                        '''
-                        sh "docker push ${FULL_IMAGE_NAME}"
-                        sh "docker push ${IMAGE_NAME}:latest"
-                        sh "docker logout"
-                    }
-                }
+    }
+}
+
+stage('Docker Push') {
+    steps {
+        script {
+            withCredentials([usernamePassword(
+                credentialsId: env.DOCKER_CREDENTIALS,
+                usernameVariable: 'DOCKER_USER',
+                passwordVariable: 'DOCKER_PASS'
+            )]) {
+                sh 'echo $DOCKER_PASS | /usr/local/bin/docker login -u $DOCKER_USER --password-stdin'
+                sh "/usr/local/bin/docker push ${FULL_IMAGE_NAME}"
+                sh "/usr/local/bin/docker push ${IMAGE_NAME}:latest"
+                sh "/usr/local/bin/docker logout"
             }
         }
     }
-    
+}
+
     post {
         always {
             script {
