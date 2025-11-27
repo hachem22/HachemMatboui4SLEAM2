@@ -9,7 +9,7 @@ pipeline { // *FIXED SYNTAX HERE*
     environment {
         // You should use withCredentials instead of exposing a PAT in an environment variable that way.
         // Also, the Docker Password variable name must be consistent.
-        GIT_CREDENTIALS = 'Sudo_Git'
+        GIT_CREDENTIALS = '12dca24c-9c9b-463d-9216-3098b14c0819'
     }
 
     stages {
