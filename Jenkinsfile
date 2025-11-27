@@ -1,33 +1,30 @@
 pipeline {
     agent any
 
-    environment {
-        DOCKER_IMAGE = "hachem22/monapp"
-    }
-
     stages {
 
-        stage('Build Maven') {
+        stage('Build App') {
             steps {
-                sh 'mvn clean package -DskipTests'
+                echo "=== BUILD DU PROJET ==="
+                sh "mvn clean package -DskipTests"
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                sh 'docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} .'
+                echo "=== CONSTRUCTION DE L'IMAGE DOCKER ==="
+                sh "docker build -t hachem22/student-management:${env.BUILD_NUMBER} ."
+                sh "docker tag hachem22/student-management:${env.BUILD_NUMBER} hachem22/student-management:latest"
             }
         }
 
-        stage('Push to DockerHub') {
+        stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds',
-                                                  usernameVariable: 'USER',
-                                                  passwordVariable: 'PASS')]) {
-                    sh 'echo $PASS | docker login -u $USER --password-stdin'
-                    sh 'docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}'
-                    sh 'docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest'
-                    sh 'docker push ${DOCKER_IMAGE}:latest'
+                echo "=== PUSH DOCKER HUB ==="
+                withCredentials([usernamePassword(credentialsId: 'dockerhub-creds', usernameVariable: 'USER', passwordVariable: 'PASS')]) {
+                    sh "echo $PASS | docker login -u $USER --password-stdin"
+                    sh "docker push hachem22/student-management:${env.BUILD_NUMBER}"
+                    sh "docker push hachem22/student-management:latest"
                 }
             }
         }
