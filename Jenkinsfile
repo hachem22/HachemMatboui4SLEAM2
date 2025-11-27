@@ -2,8 +2,8 @@ pipeline {
     agent any
 
     tools {
-        jdk 'JAVA_HOME'
-        maven 'MAVEN_LOCAL'
+        jdk 'JAVA_HOME'   // Java installé : /usr/lib/jvm/java-17-openjdk-amd64
+    maven 'M2_HOME'   // Maven installé : /usr/share/maven
     }
 
     environment {
