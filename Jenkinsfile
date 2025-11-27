@@ -1,54 +1,45 @@
-pipeline { // *FIXED SYNTAX HERE*
+pipeline {
     agent any
 
-    tools {
-        jdk 'JAVA_HOME'
-        maven 'M2_HOME'
-    }
-
     environment {
-        // You should use withCredentials instead of exposing a PAT in an environment variable that way.
-        // Also, the Docker Password variable name must be consistent.
-        GIT_CREDENTIALS = '12dca24c-9c9b-463d-9216-3098b14c0819'
+        DOCKER_IMAGE = "TONDOCKERUSER/ton-repo"
+        DOCKERHUB_CREDENTIALS = "dockerhub-creds"
     }
 
     stages {
-
-        stage('Clone Project') {
+        stage('Checkout') {
             steps {
-                git branch: 'main',
-                    credentialsId: "${GIT_CREDENTIALS}",
-                    url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git'
+                git branch: 'main', url: 'https://github.com/TONUSER/TONREPO.git'
             }
         }
 
-        stage('Build: clean & package') {
+        stage('Build Docker Image') {
             steps {
-                sh 'mvn clean package -DskipTests'
-                echo 'Build finished! JAR is available in target/.'
+                echo "=== BUILD DOCKER IMAGE ==="
+                sh 'docker --version'
+                sh 'docker build -t ${DOCKER_IMAGE}:${BUILD_NUMBER} .'
+                sh 'docker tag ${DOCKER_IMAGE}:${BUILD_NUMBER} ${DOCKER_IMAGE}:latest'
             }
         }
-        
-        stage('Docker Build') { // *STAGE ORDER CORRECTED*
+
+        stage('Push Docker Image') {
             steps {
-                script {
-                    sh "docker build -t lhech24/student-management:1.0 ."
+                echo "=== PUSH IMAGE TO DOCKER HUB ==="
+                withCredentials([usernamePassword(credentialsId: "${env.DOCKERHUB_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                    sh 'echo $DOCKER_PASS | docker login -u $DOCKER_USER --password-stdin'
+                    sh 'docker push ${DOCKER_IMAGE}:${BUILD_NUMBER}'
+                    sh 'docker push ${DOCKER_IMAGE}:latest'
                 }
             }
         }
-        
-        stage('Docker Push') { // *STAGE ORDER CORRECTED*
-            steps {
-                // Using 'withCredentials' is the standard secure way to handle Docker login
-                withCredentials([usernamePassword(
-                    credentialsId: 'docker-hub-credentials', // Your Docker Credential ID
-                    passwordVariable: 'DOCKER_PASSWORD',
-                    usernameVariable: 'DOCKER_USERNAME')]) {
-                    
-                    sh "echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_USERNAME} --password-stdin"
-                    sh "docker push lhech24/student-management:1.0"
-                }
-            }
+    }
+
+    post {
+        success {
+            echo "Build terminé avec succès"
+        }
+        failure {
+            echo "Build échoué"
         }
     }
 }
