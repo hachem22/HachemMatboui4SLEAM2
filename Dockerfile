@@ -1,11 +1,11 @@
-# Image de base Java 17
-FROM openjdk:17-slim
+# Étape 1 : Utiliser une image JDK
+FROM openjdk:17-jdk-slim
 
-# Répertoire de travail
-WORKDIR /app
+# Étape 2 : Copier le JAR généré par Maven
+COPY target/*.jar app.jar
 
-# Copier le jar généré par Maven
-COPY target/student-management.jar /app/student-management.jar
+# Étape 3 : Exposer le port de ton application
+EXPOSE 8080
 
-# Commande pour exécuter l'application
-ENTRYPOINT ["java", "-jar", "student-management.jar"]
+# Étape 4 : Commande de lancement
+ENTRYPOINT ["java", "-jar", "/app.jar"]
