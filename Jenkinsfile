@@ -1,33 +1,45 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'MAVEN_HOME'
+    environment {
+        DOCKER_IMAGE = "lhech24/student-management"
     }
 
     stages {
 
-        stage('Clone Repo') {
+        stage('Clone repository') {
             steps {
-                git branch: 'main',
-                    url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git',
-                    credentialsId: 'github-creds'
+                checkout scm
             }
         }
 
-        stage('Build Artifact') {
+        stage('Build Maven') {
             steps {
                 sh 'mvn clean package -DskipTests'
             }
         }
-    }
 
-    post {
-        success {
-            echo "Build SUCCESS ✔️"
+        stage('Build Docker Image') {
+            steps {
+                sh """
+                docker build -t $DOCKER_IMAGE:latest .
+                """
+            }
         }
-        failure {
-            echo "Build FAILED ❌"
+
+        stage('Push Docker Image') {
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub',
+                    usernameVariable: 'DOCKER_USER',
+                    passwordVariable: 'DOCKER_PASS'
+                )]) {
+                    sh """
+                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
+                    docker push $DOCKER_IMAGE:latest
+                    """
+                }
+            }
         }
     }
 }
