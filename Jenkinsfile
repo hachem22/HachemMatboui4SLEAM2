@@ -1,7 +1,13 @@
 pipeline {
     agent any
 
+    tools {
+        // Maven installé automatiquement dans Jenkins
+        maven 'MAVEN_HOME'
+    }
+
     environment {
+        // Nom de ton image Docker Hub
         DOCKER_IMAGE = "lhech24/student-management"
     }
 
@@ -30,7 +36,7 @@ pipeline {
         stage('Push Docker Image') {
             steps {
                 withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub',
+                    credentialsId: 'dockerhub',  // <-- ID des credentials DockerHub
                     usernameVariable: 'DOCKER_USER',
                     passwordVariable: 'DOCKER_PASS'
                 )]) {
@@ -40,6 +46,15 @@ pipeline {
                     """
                 }
             }
+        }
+    }
+
+    post {
+        success {
+            echo "🚀 Pipeline réussi ! Image poussée sur Docker Hub ✔️"
+        }
+        failure {
+            echo "❌ Pipeline échoué."
         }
     }
 }
