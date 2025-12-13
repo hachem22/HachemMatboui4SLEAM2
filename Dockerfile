@@ -1,5 +1,7 @@
-FROM eclipse-temurin:17-jdk
+
+
+FROM openjdk:11-jre-slim
 WORKDIR /app
-COPY target/student-management-0.0.1-SNAPSHOT.jar app.jar
-EXPOSE 8080
+COPY --from=build /app/target/app.jar app.jar
+EXPOSE 8081
 ENTRYPOINT ["java", "-jar", "app.jar"]
