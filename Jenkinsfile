@@ -9,7 +9,7 @@ pipeline {
     environment {
         GITHUB_CREDENTIALS = 'github-credentials'
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
-        DOCKERHUB_USERNAME = 'VOTRE_USERNAME_DOCKERHUB'
+        DOCKERHUB_USERNAME = 'hachem22'  // ⬅️ VOTRE USERNAME DOCKER HUB
         IMAGE_NAME = "${DOCKERHUB_USERNAME}/springboot-app"
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
@@ -35,8 +35,8 @@ pipeline {
             steps {
                 echo '===== Construction de l\'image Docker ====='
                 script {
-                    docker.build("${IMAGE_NAME}:${IMAGE_TAG}")
-                    docker.build("${IMAGE_NAME}:latest")
+                    sh "docker build -t ${IMAGE_NAME}:${IMAGE_TAG} ."
+                    sh "docker tag ${IMAGE_NAME}:${IMAGE_TAG} ${IMAGE_NAME}:latest"
                 }
             }
         }
@@ -45,9 +45,10 @@ pipeline {
             steps {
                 echo '===== Push de l\'image sur Docker Hub ====='
                 script {
-                    docker.withRegistry('https://registry.hub.docker.com', "${DOCKERHUB_CREDENTIALS}") {
-                        docker.image("${IMAGE_NAME}:${IMAGE_TAG}").push()
-                        docker.image("${IMAGE_NAME}:latest").push()
+                    withCredentials([usernamePassword(credentialsId: "${DOCKERHUB_CREDENTIALS}", usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
+                        sh "echo \$DOCKER_PASS | docker login -u \$DOCKER_USER --password-stdin"
+                        sh "docker push ${IMAGE_NAME}:${IMAGE_TAG}"
+                        sh "docker push ${IMAGE_NAME}:latest"
                     }
                 }
             }
@@ -104,6 +105,7 @@ pipeline {
         always {
             echo '===== Nettoyage des images Docker locales ====='
             sh "docker rmi ${IMAGE_NAME}:${IMAGE_TAG} || true"
+            sh "docker rmi ${IMAGE_NAME}:latest || true"
         }
     }
 }
