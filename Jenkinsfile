@@ -20,7 +20,7 @@ pipeline {
                 echo '===== Récupération du code depuis GitHub ====='
                 git branch: 'main',
                     credentialsId: "${GITHUB_CREDENTIALS}",
-                    url: 'https://github.com/VOTRE_USERNAME/nom_prenom_classe.git'
+                    url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git'
             }
         }
 
