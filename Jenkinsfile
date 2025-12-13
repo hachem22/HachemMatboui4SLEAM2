@@ -9,7 +9,7 @@ pipeline {
     environment {
         GITHUB_CREDENTIALS = 'github-credentials'
         DOCKERHUB_CREDENTIALS = 'dockerhub-credentials'
-        DOCKERHUB_USERNAME = 'hachem22'  // ⬅️ VOTRE USERNAME DOCKER HUB
+        DOCKERHUB_USERNAME = 'lhech24'  // ⬅️ VOTRE USERNAME DOCKER HUB
         IMAGE_NAME = "${DOCKERHUB_USERNAME}/springboot-app"
         IMAGE_TAG = "${BUILD_NUMBER}"
     }
