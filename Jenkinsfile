@@ -2,69 +2,45 @@ pipeline {
     agent any
 
     tools {
-        maven 'MAVEN_HOME'
+        maven 'Maven-3.6'
+        jdk 'JDK-17'
     }
 
     environment {
-        DOCKER_IMAGE = "lhech24/student-management"
+        GITHUB_CREDENTIALS = 'github-credentials'
     }
 
     stages {
-
-        stage('Clone repository') {
+        stage('Checkout') {
             steps {
-                checkout scm
+                echo '===== Récupération du code depuis GitHub ====='
+                git branch: 'main',
+                    credentialsId: "${GITHUB_CREDENTIALS}",
+                    url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git'
             }
         }
 
-        stage('Build Maven') {
+        stage('Build') {
             steps {
+                echo '===== Build Maven : clean + package (skip tests) ====='
                 sh 'mvn clean package -DskipTests'
             }
         }
 
-        stage('Build Docker Image') {
+        stage('Archive Artifacts') {
             steps {
-                sh """
-                docker build -t $DOCKER_IMAGE:latest .
-                """
-            }
-        }
-
-        stage('Push Docker Image') {
-            steps {
-                withCredentials([usernamePassword(
-                    credentialsId: 'dockerhub-creds',
-                    usernameVariable: 'DOCKER_USER',
-                    passwordVariable: 'DOCKER_PASS'
-                )]) {
-                    sh """
-                    echo "$DOCKER_PASS" | docker login -u "$DOCKER_USER" --password-stdin
-                    docker push $DOCKER_IMAGE:latest
-                    """
-                }
-            }
-        }
-
-        stage('Deploy to Kubernetes') {
-            steps {
-                sh """
-                kubectl apply -f k8s/mysql-secret.yaml
-                kubectl apply -f k8s/mysql-deployment.yaml
-                kubectl apply -f k8s/mysql-service.yaml
-                kubectl apply -f k8s/spring-deployment.yaml
-                kubectl apply -f k8s/spring-service.yaml
-                """
+                echo '===== Archivage du JAR ====='
+                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
             }
         }
     }
 
     post {
         success {
-            echo "🚀 Pipeline réussi ! Application déployée sur Kubernetes ✔️"
+            echo '===== ✅ Build réussi ! ====='
         }
         failure {
-            echo "❌ Pipeline échoué."
+            echo '===== ❌ Build échoué ! ====='
         }
     }
 }
