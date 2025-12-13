@@ -54,42 +54,6 @@ pipeline {
             }
         }
 
-        stage('Deploy MySQL to Kubernetes') {
-            steps {
-                echo '===== Déploiement MySQL sur Kubernetes ====='
-                sh '''
-                    kubectl apply -f k8s/mysql-secret.yaml
-                    kubectl apply -f k8s/mysql-pvc.yaml
-                    kubectl apply -f k8s/mysql-deployment.yaml
-                    kubectl rollout status deployment/mysql --timeout=300s
-                '''
-            }
-        }
-
-        stage('Deploy Spring Boot to Kubernetes') {
-            steps {
-                echo '===== Déploiement Spring Boot sur Kubernetes ====='
-                sh '''
-                    kubectl apply -f k8s/springboot-deployment.yaml
-                    kubectl rollout status deployment/springboot-app --timeout=300s
-                '''
-            }
-        }
-
-        stage('Verify Deployment') {
-            steps {
-                echo '===== Vérification du déploiement ====='
-                sh '''
-                    echo "=== Pods ==="
-                    kubectl get pods
-                    echo "=== Services ==="
-                    kubectl get svc
-                    echo "=== Secrets ==="
-                    kubectl get secrets
-                '''
-            }
-        }
-    }
 
     post {
         success {
