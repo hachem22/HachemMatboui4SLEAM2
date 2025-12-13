@@ -1,46 +1,73 @@
 pipeline {
     agent any
 
-    tools {
-        maven 'Maven-3.6'
-        jdk 'JDK-17'
-    }
-
     environment {
-        GITHUB_CREDENTIALS = 'github-credentials'
+        APP_NAME = "springboot-app"
+        K8S_NAMESPACE = "devops"
     }
 
     stages {
-        stage('Checkout') {
+
+        stage('Checkout Code') {
             steps {
-                echo '===== 📥 Récupération du code depuis GitHub ====='
-                git branch: 'main',
-                    credentialsId: "${GITHUB_CREDENTIALS}",
-                    url: 'https://github.com/hachem22/HachemMatboui4SLEAM2.git'
+                echo "📥 Récupération du code source"
+                checkout scm
             }
         }
 
-        stage('Build') {
+        stage('Build Spring Boot (Maven)') {
             steps {
-                echo '===== 🔨 Build Maven : clean + package (skip tests) ====='
-                sh 'mvn clean package -DskipTests'
+                echo "🔨 Build Maven"
+                sh '''
+                  chmod +x mvnw
+                  ./mvnw clean package -DskipTests
+                '''
             }
         }
 
-        stage('Archive Artifacts') {
+        stage('Build Docker Image') {
             steps {
-                echo '===== 📦 Archivage du JAR ====='
-                archiveArtifacts artifacts: 'target/*.jar', fingerprint: true
+                echo "🐳 Build image Docker dans Minikube"
+                sh '''
+                  eval $(minikube docker-env)
+                  docker build -t ${APP_NAME} .
+                '''
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                echo "🚀 Déploiement Kubernetes"
+                sh '''
+                  kubectl config set-context --current --namespace=${K8S_NAMESPACE}
+                  kubectl apply -f k8s/mysql-secret.yaml --validate=false
+                  kubectl apply -f k8s/mysql-pvc.yaml --validate=false
+                  kubectl apply -f k8s/mysql-deployment.yaml --validate=false
+                  kubectl apply -f k8s/mysql-service.yaml --validate=false
+
+                  kubectl apply -f k8s/springboot-deployment.yaml --validate=false
+                  kubectl apply -f k8s/springboot-service.yaml --validate=false
+                '''
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                echo "✅ Vérification des pods"
+                sh '''
+                  kubectl get pods
+                  kubectl get svc
+                '''
             }
         }
     }
 
     post {
         success {
-            echo '===== ✅ Build réussi ! ====='
+            echo "🎉 Pipeline terminé avec SUCCÈS"
         }
         failure {
-            echo '===== ❌ Build échoué ! ====='
+            echo "❌ Pipeline ÉCHOUÉ – Vérifier les logs"
         }
     }
 }
