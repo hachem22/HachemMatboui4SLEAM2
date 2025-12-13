@@ -1,43 +1,34 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: springboot-app
+  name: springboot
 spec:
-  replicas: 2
+  replicas: 1
   selector:
     matchLabels:
-      app: springboot-app
+      app: springboot
   template:
     metadata:
       labels:
-        app: springboot-app
+        app: springboot
     spec:
       containers:
-        - name: springboot-app
-          image: lhech24/springboot-app:latest
+        - name: springboot
+          image: lhech24/student-management:latest
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_DATASOURCE_URL
               value: jdbc:mysql://mysql:3306/studentdb
             - name: SPRING_DATASOURCE_USERNAME
-              value: student
+              valueFrom:
+                secretKeyRef:
+                  name: mysql-secret
+                  key: MYSQL_USER
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: mysql-secret
-                  key: mysql-password
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: springboot-service
-spec:
-  type: NodePort
-  selector:
-    app: springboot-app
-  ports:
-    - protocol: TCP
-      port: 8080
-      targetPort: 8080
-      nodePort: 30080
+                  key: MYSQL_PASSWORD
+            - name: SPRING_DATASOURCE_DRIVER_CLASS_NAME
+              value: com.mysql.cj.jdbc.Driver
