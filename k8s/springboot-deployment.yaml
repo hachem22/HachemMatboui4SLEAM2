@@ -14,7 +14,8 @@ spec:
     spec:
       containers:
         - name: springboot
-          image: lhech24/student-management:latest
+          image: springboot-app
+          imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
           env:
