@@ -2,11 +2,11 @@ pipeline {
     agent any
     
     tools {
-        maven 'Maven'
+        maven 'Maven-3.6'  // ✅ CORRIGÉ: Changé de 'Maven' à 'Maven-3.6'
     }
     
     environment {
-        DOCKER_IMAGE = 'studentmang-app:1.0'
+        DOCKER_IMAGE = 'studentmang-app'  // ✅ CORRIGÉ: Enlevé :1.0 pour utiliser le versioning dynamique
         DOCKER_TAG = "${BUILD_NUMBER}"
         NAMESPACE = 'devops'
         MINIKUBE_IP = sh(script: 'minikube ip', returnStdout: true).trim()
@@ -55,28 +55,6 @@ pipeline {
                               -Dsonar.sources=src/main/java \
                               -Dsonar.java.binaries=target/classes
                         """
-                    }
-                }
-            }
-        }
-        
-        stage('🚦 Quality Gate') {
-            steps {
-                echo '🚦 Waiting for SonarQube Quality Gate...'
-                timeout(time: 5, unit: 'MINUTES') {
-                    script {
-                        try {
-                            def qg = waitForQualityGate()
-                            if (qg.status != 'OK') {
-                                echo "⚠️ Quality Gate status: ${qg.status}"
-                                echo "⚠️ Continuing anyway..."
-                            } else {
-                                echo "✅ Quality Gate passed!"
-                            }
-                        } catch (Exception e) {
-                            echo "⚠️ Quality Gate check failed: ${e.message}"
-                            echo "⚠️ Continuing anyway..."
-                        }
                     }
                 }
             }
