@@ -14,8 +14,8 @@ spec:
     spec:
       containers:
         - name: springboot
-          image: springboot-app
-          imagePullPolicy: IfNotPresent
+          image: studentmang-app:1.0
+          imagePullPolicy: Never
           ports:
             - containerPort: 8080
           env:
