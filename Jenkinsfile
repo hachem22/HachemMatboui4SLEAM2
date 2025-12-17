@@ -6,7 +6,7 @@ pipeline {
     }
     
     environment {
-        DOCKER_IMAGE = 'studentmang-app'
+        DOCKER_IMAGE = 'studentmang-app:1.0'
         DOCKER_TAG = "${BUILD_NUMBER}"
         NAMESPACE = 'devops'
         MINIKUBE_IP = sh(script: 'minikube ip', returnStdout: true).trim()
